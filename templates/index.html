@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visualização de Dados</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .container {
+            width: 90%;
+            margin: 20px auto;
+        }
+        .filters {
+            margin-bottom: 20px;
+        }
+        .filter-group {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="filters">
+            <div class="filter-group">
+                <label>Valor Mínimo:</label>
+                <input type="number" id="min-value" value="0">
+                <label>Valor Máximo:</label>
+                <input type="number" id="max-value" value="1000">
+            </div>
+            <div class="filter-group">
+                <label>Data Inicial:</label>
+                <input type="date" id="start-date">
+                <label>Data Final:</label>
+                <input type="date" id="end-date">
+            </div>
+            <button onclick="updateChart()">Atualizar</button>
+        </div>
+        <div id="chart"></div>
+    </div>
+
+    <script>
+        function updateChart() {
+            const minValue = document.getElementById('min-value').value;
+            const maxValue = document.getElementById('max-value').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+
+            fetch(`/data?min_value=${minValue}&max_value=${maxValue}&start_date=${startDate}&end_date=${endDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    const jsonData = data.filter(item => item.source === 'json');
+                    const xmlData = data.filter(item => item.source === 'xml');
+
+                    const traces = [
+                        {
+                            x: jsonData.map(item => item.date),
+                            y: jsonData.map(item => item.value),
+                            type: 'scatter',
+                            name: 'JSON Data',
+                            mode: 'lines+markers'
+                        },
+                        {
+                            x: xmlData.map(item => item.date),
+                            y: xmlData.map(item => item.value),
+                            type: 'scatter',
+                            name: 'XML Data',
+                            mode: 'lines+markers'
+                        }
+                    ];
+
+                    const layout = {
+                        title: 'Visualização de Dados JSON e XML',
+                        xaxis: {
+                            title: 'Data'
+                        },
+                        yaxis: {
+                            title: 'Valor'
+                        }
+                    };
+
+                    Plotly.newPlot('chart', traces, layout);
+                });
+        }
+
+        updateChart();
+    </script>
+</body>
+</html>
